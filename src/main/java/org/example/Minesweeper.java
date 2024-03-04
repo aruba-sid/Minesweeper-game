@@ -2,78 +2,82 @@ package org.example;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Random;
 
 public class Minesweeper extends JFrame {
 //    Array of buttons for the game board
-    private JButton[][] buttons;
-    private boolean[][] isMine;
-    private int[][] adjMines;
+    private final JButton[][] buttons;
+    private final boolean[][] isMine;
+    private final int[][] adjMines;
     private int uncoveredCells;
+    private final int nonMineCells;
 
 
-    public Minesweeper(){
+    public Minesweeper(int rows, int cols, int mines){
         setTitle("Minesweeper");
+        nonMineCells = (rows*cols) - mines;
+        int tileSize = 100;
+        int width = cols*tileSize;
+        int height = rows*tileSize;
 
-//        TODO Customise size through user input
-        setLayout(new GridLayout(9,9));
+        setLayout(new GridLayout(rows,cols));
+        setSize(width, height);
 
-        buttons = new JButton[9][9];
-        isMine = new boolean[9][9];
-        adjMines = new int[9][9];
+        buttons = new JButton[rows][cols];
+        isMine = new boolean[rows][cols];
+        adjMines = new int[rows][cols];
 
-        for (int i=0; i<9; i++){
-            for (int j=0; j<9; j++){
+        for (int i=0; i<rows; i++){
+            for (int j=0; j<cols; j++){
                 buttons[i][j] = new JButton();
-                buttons[i][j].addActionListener(new onClickListener(i,j));
+                buttons[i][j].addMouseListener(new onClickListener(i, j));
+//                buttons[i][j].addActionListener(new onClickListener(i,j));
                 add(buttons[i][j]);
+
+
             }
         }
-        placeMines();
-        countAdjMines();
+        placeMines(rows, cols, mines);
+        countAdjMines(rows, cols);
         pack();
         setVisible(true);
 
     }
 
-    private void placeMines(){
+    private void placeMines(int rows, int cols, int mines){
         Random random = new Random();
+//        boolean[][] chosen = new boolean[rows][cols];
+
         int minesPlaced = 0;
-        while (minesPlaced<10){
-            int i = random.nextInt(9);
-            int j = random.nextInt(9);
+        while (minesPlaced<mines){
+            int i = random.nextInt(rows);
+            int j = random.nextInt(cols);
 //            If cell at (i,j) is not a mine
-            if(!isMine[i][j]) {
+            if(!isMine[i][j]){
 //                Make it a mine
                 isMine[i][j] = true;
                 minesPlaced++;
+//                chosen[i][j] = true;
             }
         }
     }
 
-    private void countAdjMines(){
+    private void countAdjMines(int rows,int cols){
 //        Loop through the cells on the board and count the number of mines around it
-        for (int i=0; i<9; i++){
-            for (int j=0; j<9; j++){
+        for (int i=0; i<rows; i++){
+            for (int j=0; j<cols; j++){
 //                If current cell is not a mine
                 if(!isMine[i][j]){
                     int count = 0;
-//                    The row above
-                    if(i>0 && j>0 && isMine[i-1][j-1]) count++;
-                    if(i>0 && isMine[i-1][j]) count++;
-                    if(i>0 && j<8 && isMine[i-1][j+1]) count++;
-
-//                    The row below
-                    if(i<8 && j>0 && isMine[i+1][j-1]) count++;
-                    if(i<8 && isMine[i+1][j]) count++;
-                    if(i<8 && j<8 && isMine[i+1][j+1]) count++;
-
-//                    The same row
-                    if(j>0 && isMine[i][j-1]) count++;
-                    if(j<8 && isMine[i][j+1]) count++;
-
+                    for (int k = Math.max(0, i - 1); k <= Math.min(rows - 1, i + 1); k++) {
+                        for (int l = Math.max(0, j - 1); l <= Math.min(cols - 1, j + 1); l++) {
+                            if (isMine[k][l]) {
+                                count++;
+                            }
+                        }
+                    }
                     adjMines[i][j] = count;
                 }
             }
@@ -85,54 +89,68 @@ public class Minesweeper extends JFrame {
     }
 
     private void loseGame(){
-        for (int i=0; i<9; i++){
-            for (int j=0; j<9; j++){
+        for (int i=0; i<buttons.length - 1; i++){
+            for (int j=0; j<buttons[0].length - 1; j++){
                 if(isMine[i][j]){
 //                    TODO figure out how to add image
-                    buttons[i][j].setText("*");
+                    buttons[i][j].setText("X");
                 }
+                buttons[i][j].setEnabled(false);
             }
         }
-        JOptionPane.showMessageDialog(this, "You lost.");
+        JOptionPane.showMessageDialog(this, "Game over.");
+//        System.exit(0);
     }
 
     private void showCell(int i, int j){
         if(isMine[i][j]){
             loseGame();
         } else{
-            buttons[i][j].setText(Integer.toString(adjMines[i][j]));
+            if (adjMines[i][j] >0) {
+                buttons[i][j].setText(Integer.toString(adjMines[i][j]));
+            }
+            else {
+                buttons[i][j].setText("");
+            }
             buttons[i][j].setEnabled(false);
             uncoveredCells++;
-            if (uncoveredCells == 71) {
+            if (uncoveredCells == nonMineCells) {
                 winGame();
             }
             if (adjMines[i][j] == 0) {
+                buttons[i][j].setEnabled(false);
                 showSurroundingCells(i, j);
             }
         }
         }
-    private void showSurroundingCells(int i, int j) {
-        if (i > 0 && buttons[i - 1][j].isEnabled()) showCell(i - 1, j);
-        if (i < 8 && buttons[i + 1][j].isEnabled()) showCell(i + 1, j);
-        if (j > 0 && buttons[i][j - 1].isEnabled()) showCell(i, j - 1);
-        if (j < 8 && buttons[i][j + 1].isEnabled()) showCell(i, j + 1);
-        if (i > 0 && j > 0 && buttons[i - 1][j - 1].isEnabled()) showCell(i - 1,j - 1);
-        if (i < 8 && j < 8 && buttons[i + 1][j + 1].isEnabled()) showCell(i + 1,j + 1);
-        if (i > 0 && j < 8 && buttons[i - 1][j + 1].isEnabled()) showCell(i - 1,j + 1);
-        if (i < 8 && j > 0 && buttons[i + 1][j - 1].isEnabled()) showCell(i + 1,j - 1);
+    private void showSurroundingCells(int row, int col) {
+        for (int i = Math.max(0, row - 1); i <= Math.min(row + 1, buttons.length - 1); i++) {
+            for (int j = Math.max(0, col - 1); j <= Math.min(col + 1, buttons[0].length - 1); j++) {
+                if (buttons[i][j].isEnabled() && !(i == row && j == col)) {
+                    showCell(i, j);
+                }
+            }
+        }
     }
 
-    private class onClickListener implements ActionListener {
-        private int i;
-        private int j;
+    private  class onClickListener extends MouseAdapter {
+        private final int row;
+        private final int col;
 
-        public onClickListener(int i, int j) {
-            this.i = i;
-            this.j = j;
+        public onClickListener(int row, int col) {
+            this.row = row;
+            this.col = col;
         }
 
-        public void actionPerformed(ActionEvent e) {
-            showCell(i, j);
+        @Override
+        public void mousePressed(MouseEvent e) {
+            if (SwingUtilities.isRightMouseButton(e)) {
+                JButton button = (JButton) e.getSource();
+                button.setText("F");
+            }
+            else if (SwingUtilities.isLeftMouseButton(e)) {
+               showCell(row, col);
+            }
         }
     }
 }
