@@ -1,6 +1,5 @@
 package org.example;
 
-import java.nio.file.LinkPermission;
 import java.util.Scanner;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
@@ -30,7 +29,7 @@ public class Main {
                 System.out.println("Invalid input. Please enter either 1, 2, 0r 3.");
         }
 
-        Minesweeper minesweeper = new Minesweeper(rows, cols, mines);
+         new Minesweeper(rows, cols, mines);
 
     }
 
