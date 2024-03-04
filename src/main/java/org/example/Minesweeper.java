@@ -33,7 +33,6 @@ public class Minesweeper extends JFrame {
             for (int j=0; j<cols; j++){
                 buttons[i][j] = new JButton();
                 buttons[i][j].addMouseListener(new onClickListener(i, j));
-//                buttons[i][j].addActionListener(new onClickListener(i,j));
                 add(buttons[i][j]);
 
 
