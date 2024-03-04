@@ -8,19 +8,21 @@ import java.util.Random;
 
 public class Minesweeper extends JFrame {
 //    Array of buttons for the game board
-    private final JButton[][] buttons;
-    private final boolean[][] isMine;
+    public final JButton[][] buttons;
+    public final boolean[][] isMine;
     private final int[][] adjMines;
     private int uncoveredCells;
     private final int nonMineCells;
-
+    private final ImageIcon flaggedIcon;
+    private final ImageIcon mineIcon;
 
     public Minesweeper(int rows, int cols, int mines){
         setTitle("Minesweeper");
         nonMineCells = (rows*cols) - mines;
-        int tileSize = 100;
+        int tileSize = 50;
         int width = cols*tileSize;
         int height = rows*tileSize;
+        pack();
 
         setLayout(new GridLayout(rows,cols));
         setSize(width, height);
@@ -29,25 +31,25 @@ public class Minesweeper extends JFrame {
         isMine = new boolean[rows][cols];
         adjMines = new int[rows][cols];
 
+//      Icons from Icons8.com
+        flaggedIcon = new ImageIcon("icons8-flag-16.png");
+        mineIcon = new ImageIcon("icons8-bomb-30.png");
+
         for (int i=0; i<rows; i++){
             for (int j=0; j<cols; j++){
                 buttons[i][j] = new JButton();
                 buttons[i][j].addMouseListener(new onClickListener(i, j));
                 add(buttons[i][j]);
-
-
             }
         }
         placeMines(rows, cols, mines);
         countAdjMines(rows, cols);
-        pack();
         setVisible(true);
 
     }
 
-    private void placeMines(int rows, int cols, int mines){
+    public void placeMines(int rows, int cols, int mines){
         Random random = new Random();
-//        boolean[][] chosen = new boolean[rows][cols];
 
         int minesPlaced = 0;
         while (minesPlaced<mines){
@@ -58,7 +60,6 @@ public class Minesweeper extends JFrame {
 //                Make it a mine
                 isMine[i][j] = true;
                 minesPlaced++;
-//                chosen[i][j] = true;
             }
         }
     }
@@ -91,8 +92,8 @@ public class Minesweeper extends JFrame {
         for (int i=0; i<buttons.length - 1; i++){
             for (int j=0; j<buttons[0].length - 1; j++){
                 if(isMine[i][j]){
-//                    TODO figure out how to add image
-                    buttons[i][j].setText("X");
+//                    buttons[i][j].setText("X");
+                    buttons[i][j].setIcon(mineIcon);
                 }
                 buttons[i][j].setEnabled(false);
             }
@@ -101,11 +102,11 @@ public class Minesweeper extends JFrame {
 //        System.exit(0);
     }
 
-    private void showCell(int i, int j){
+    public void showCell(int i, int j){
         if(isMine[i][j]){
             loseGame();
         } else{
-            if (adjMines[i][j] >0) {
+            if (adjMines[i][j]>0) {
                 buttons[i][j].setText(Integer.toString(adjMines[i][j]));
             }
             else {
@@ -145,7 +146,8 @@ public class Minesweeper extends JFrame {
         public void mousePressed(MouseEvent e) {
             if (SwingUtilities.isRightMouseButton(e)) {
                 JButton button = (JButton) e.getSource();
-                button.setText("F");
+                button.setIcon(flaggedIcon);
+//                button.setText("F");
             }
             else if (SwingUtilities.isLeftMouseButton(e)) {
                showCell(row, col);
